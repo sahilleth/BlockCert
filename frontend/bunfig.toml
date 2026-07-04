@@ -1,0 +1,3 @@
+[install]
+# Optional: delay installing packages published in the last 24h (supply-chain guard)
+minimumReleaseAge = 86400

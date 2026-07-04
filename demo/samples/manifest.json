@@ -1,0 +1,37 @@
+[
+  {
+    "file": "btech-cse-alice.pdf",
+    "title": "Bachelor of Technology — Computer Science",
+    "student": "Alice Johnson",
+    "roll": "CS2021-0142",
+    "grade": "First Class with Distinction"
+  },
+  {
+    "file": "btech-ece-bob.pdf",
+    "title": "Bachelor of Technology — Electronics",
+    "student": "Bob Martinez",
+    "roll": "EC2021-0087",
+    "grade": "First Class"
+  },
+  {
+    "file": "mba-carol.pdf",
+    "title": "Master of Business Administration",
+    "student": "Carol Williams",
+    "roll": "MBA2022-0033",
+    "grade": "Distinction"
+  },
+  {
+    "file": "bsc-math-david.pdf",
+    "title": "Bachelor of Science — Mathematics",
+    "student": "David Chen",
+    "roll": "MA2020-0199",
+    "grade": "First Class"
+  },
+  {
+    "file": "mtech-ai-eve.pdf",
+    "title": "Master of Technology — Artificial Intelligence",
+    "student": "Eve Nakamura",
+    "roll": "AI2023-0005",
+    "grade": "Distinction"
+  }
+]
