@@ -14,7 +14,18 @@ interface DeploymentRecord {
 }
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
+  const signers = await ethers.getSigners();
+  if (signers.length === 0) {
+    console.error("\n❌ No deployer wallet — cannot deploy to", network.name);
+    console.error("\nCreate blockchain/.env with:");
+    console.error("  PRIVATE_KEY=your_metamask_private_key_without_0x_prefix");
+    console.error("  AMOY_RPC_URL=https://rpc-amoy.polygon.technology");
+    console.error("\nFund the wallet with Amoy test MATIC:");
+    console.error("  https://faucet.polygon.technology/\n");
+    process.exit(1);
+  }
+
+  const [deployer] = signers;
   const net = await ethers.provider.getNetwork();
 
   console.log("═══════════════════════════════════════════════════════");

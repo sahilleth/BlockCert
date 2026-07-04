@@ -2,10 +2,12 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
+import * as path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY ?? "";
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY ?? process.env.BLOCKCHAIN_PRIVATE_KEY ?? "";
 const AMOY_RPC_URL = process.env.AMOY_RPC_URL ?? "https://rpc-amoy.polygon.technology";
 
 const accounts = PRIVATE_KEY ? [PRIVATE_KEY.startsWith("0x") ? PRIVATE_KEY : `0x${PRIVATE_KEY}`] : [];
