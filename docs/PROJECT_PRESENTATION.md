@@ -14,7 +14,9 @@
 | **Domain** | Web Application + Blockchain + Information Security |
 | **Type** | Final Year Engineering Project (Monorepo) |
 | **Target Users** | College administrators (issuers), employers (verifiers), students (indirect) |
-| **Blockchain Network** | Polygon Amoy Testnet (production path) / Hardhat Local (development) |
+| **Blockchain Network** | Polygon Amoy Testnet (live on Railway) / Hardhat Local (development) |
+| **Live Demo URLs** | Frontend: blockcertfrontend-production.up.railway.app · API: blockcertbackend-production.up.railway.app |
+| **Smart Contract (Amoy)** | `0x60bD0df240D74FFc83f94CE1205FE939413F03F7` |
 | **Repository Structure** | npm workspaces — frontend, backend, blockchain |
 
 ---
@@ -38,11 +40,12 @@
 15. [Security Measures](#15-security-measures)
 16. [Testing and Validation](#16-testing-and-validation)
 17. [Live Demonstration Script for Faculty](#17-live-demonstration-script-for-faculty)
-18. [Results and Outcomes](#18-results-and-outcomes)
-19. [Limitations](#19-limitations)
-20. [Future Enhancements](#20-future-enhancements)
-21. [Conclusion](#21-conclusion)
-22. [References and Further Reading](#22-references-and-further-reading)
+18. [Production Deployment — Railway & Polygon Amoy](#18-production-deployment--railway--polygon-amoy)
+19. [Results and Outcomes](#19-results-and-outcomes)
+20. [Limitations](#20-limitations)
+21. [Future Enhancements](#21-future-enhancements)
+22. [Conclusion](#22-conclusion)
+23. [References and Further Reading](#23-references-and-further-reading)
 
 ---
 
@@ -184,7 +187,7 @@ Result: VERIFIED or TAMPERED (with hash audit details)
 - Student self-service portal
 - Multi-institution federation
 - Mobile native apps (web-responsive UI only)
-- Mainnet deployment and production DevOps
+- Mainnet deployment (cloud demo uses Polygon Amoy testnet on Railway)
 - Digital signatures on PDF (PKI / DocuSign integration)
 
 ---
@@ -819,13 +822,284 @@ Explain that if the PDF bytes change after issuance:
 
 ### Phase 7 — Q&A Preparation (2 min)
 
-Anticipated faculty questions — see Section 21 and Limitations.
+Anticipated faculty questions — see Section 22 and Limitations.
+
+### Phase 8 — Live Cloud Demo (Optional, 3 min)
+
+If presenting the **Railway deployment** instead of localhost:
+
+1. Open **https://blockcertfrontend-production.up.railway.app**
+2. Log in as admin (`admin@blockcert.edu` / `Admin@123456`)
+3. Upload a certificate and show status **ON_CHAIN**
+4. Open **https://blockcertbackend-production.up.railway.app/api/v1/health/blockchain** — show chain ID, contract address, wallet balance
+5. Open Polygonscan: **https://amoy.polygonscan.com/address/0x60bD0df240D74FFc83f94CE1205FE939413F03F7**
+
+See [Section 18](#18-production-deployment--railway--polygon-amoy) for full deployment details.
 
 ---
 
-## 18. Results and Outcomes
+## 18. Production Deployment — Railway & Polygon Amoy
 
-### 18.1 Functional Outcomes
+This section documents how BlockCert was deployed to a **live cloud environment** on [Railway](https://railway.com), connected to the **Polygon Amoy testnet**, including problems encountered during deployment and how each was resolved. This is suitable for faculty evaluation when demonstrating a production-like setup beyond localhost.
+
+### 18.1 Live Deployment Summary
+
+| Component | URL / Value |
+|-----------|-------------|
+| **Frontend (UI)** | https://blockcertfrontend-production.up.railway.app |
+| **Backend (API)** | https://blockcertbackend-production.up.railway.app |
+| **API Health** | https://blockcertbackend-production.up.railway.app/api/v1/health |
+| **Blockchain Health** | https://blockcertbackend-production.up.railway.app/api/v1/health/blockchain |
+| **Swagger Docs** | https://blockcertbackend-production.up.railway.app/api/v1/docs |
+| **GitHub Repository** | https://github.com/sahilleth/BlockCert |
+| **Railway Project** | `empathetic-healing` (region: San Francisco) |
+
+**Demo credentials (change password before public sharing):**
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@blockcert.edu | Admin@123456 |
+| Employer | employer@blockcert.edu | Employer@123456 |
+
+### 18.2 Polygon Amoy Smart Contract Deployment
+
+The smart contract was deployed **from a local development machine** (not from Railway). Railway only runs the backend API, which **calls** the already-deployed contract via RPC.
+
+#### Deployment record
+
+| Field | Value |
+|-------|-------|
+| **Network** | Polygon Amoy Testnet |
+| **Chain ID** | `80002` |
+| **Contract name** | `CertificateRegistry` |
+| **Contract address** | `0x60bD0df240D74FFc83f94CE1205FE939413F03F7` |
+| **Deployer / owner wallet** | `0x96fc9Df30abe3E78E8CC4f9c3e77a5a6D29BD923` |
+| **Deployed at** | 2026-07-04 |
+| **Block number** | 41,337,580 |
+| **RPC URL** | `https://rpc-amoy.polygon.technology` |
+| **Block explorer** | https://amoy.polygonscan.com/address/0x60bD0df240D74FFc83f94CE1205FE939413F03F7 |
+
+The deployment record is saved in the repository at `blockchain/deployments/amoy.json`.
+
+#### How the contract was deployed (step-by-step)
+
+1. **Create a MetaMask wallet** (or use an existing one) and add Polygon Amoy network (Chain ID 80002).
+2. **Fund the wallet** with test MATIC from the [Polygon Faucet](https://faucet.polygon.technology/) — gas is required to deploy and to issue certificates later.
+3. **Configure local secrets** in `blockchain/.env` (never commit this file):
+   ```
+   PRIVATE_KEY=<deployer_wallet_private_key_without_0x_prefix>
+   AMOY_RPC_URL=https://rpc-amoy.polygon.technology
+   ```
+4. **Install dependencies** from the monorepo root:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+5. **Deploy to Amoy:**
+   ```bash
+   npm run deploy:amoy
+   ```
+6. **Copy the contract address** from terminal output or `blockchain/deployments/amoy.json`.
+7. **Set the same wallet's private key** as `PRIVATE_KEY` on the Railway backend — the backend wallet must be the **contract owner** to call `issueCertificate`.
+
+> **Important:** The **contract address** and **wallet address** are different. The contract is deployed *to* an address on-chain; the wallet *signs* transactions. Both must be configured correctly in backend environment variables.
+
+#### Verified blockchain health (production)
+
+After deployment, the backend health endpoint confirmed:
+
+```json
+{
+  "success": true,
+  "data": {
+    "connected": true,
+    "chainId": 80002,
+    "expectedChainId": 80002,
+    "contractAddress": "0x60bD0df240D74FFc83f94CE1205FE939413F03F7",
+    "contractDeployed": true,
+    "walletAddress": "0x96fc9Df30abe3E78E8CC4f9c3e77a5a6D29BD923",
+    "walletBalance": "0.086164089970944589",
+    "isOwner": true,
+    "totalIssuedOnChain": 0,
+    "rpcUrl": "https://rpc-amoy.polygon.technology"
+  }
+}
+```
+
+Key checks: `connected: true`, `isOwner: true`, and `walletBalance > 0` (MATIC for gas).
+
+### 18.3 Railway Architecture
+
+BlockCert on Railway uses **three services** plus an external blockchain RPC:
+
+```mermaid
+flowchart TB
+    subgraph Railway["Railway Cloud (empathetic-healing)"]
+        FE["@blockcert/frontend<br/>TanStack Start UI"]
+        BE["@blockcert/backend<br/>Express API + ethers.js"]
+        DB[(MySQL 9.4)]
+        VOL["Volume: /data/uploads<br/>PDF + QR storage"]
+    end
+
+    subgraph External["External"]
+        AMOY["Polygon Amoy Testnet<br/>Chain ID 80002"]
+        SC["CertificateRegistry.sol<br/>0x60bD0...03F7"]
+    end
+
+    USER[Browser / QR Scanner] --> FE
+    FE -->|HTTPS REST| BE
+    BE --> DB
+    BE --> VOL
+    BE -->|RPC + signed txs| SC
+    SC --> AMOY
+```
+
+| Railway Service | Purpose | Status |
+|-----------------|---------|--------|
+| `@blockcert/backend` | Express API, MySQL, blockchain txs, PDF storage | Online |
+| `@blockcert/frontend` | TanStack Start web UI | Online |
+| `MySQL` | Relational database (users, certificates, logs) | Online |
+| `@blockcert/blockchain` | *(Not needed)* — Hardhat is dev-only | Removed / should not run on Railway |
+
+The backend handles all blockchain interaction directly via `ethers.js`. A separate Hardhat node service on Railway is **not required** and was removed after causing confusion.
+
+### 18.4 Railway Deployment Process (Step-by-Step)
+
+#### Step 1 — Connect GitHub repository
+
+1. Create a Railway account at [railway.com](https://railway.com).
+2. **New Project → Deploy from GitHub repo →** select `sahilleth/BlockCert`.
+3. Railway auto-detects the monorepo and creates an initial service.
+
+#### Step 2 — Add MySQL database
+
+1. In the project, click **+ New → Database → MySQL**.
+2. Wait until MySQL shows **Active**.
+3. Link MySQL to the backend via variable reference:
+   ```
+   DATABASE_URL=${{MySQL.MYSQL_URL}}
+   ```
+4. Run migrations and seed (one-time, via Railway CLI):
+   ```bash
+   npx @railway/cli login
+   npx @railway/cli link    # select project + backend service
+   npx @railway/cli run npm run db:migrate --workspace=@blockcert/backend
+   npx @railway/cli run npm run db:seed --workspace=@blockcert/backend
+   ```
+
+#### Step 3 — Deploy backend API
+
+1. Create a second service from the same GitHub repo; rename to `@blockcert/backend`.
+2. Configure build using `Dockerfile.backend` or `railway.backend.toml`.
+3. **Add a persistent volume** at mount path `/data/uploads` — without this, uploaded PDFs are lost on every redeploy.
+4. Set environment variables:
+
+| Variable | Production value |
+|----------|------------------|
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | `${{MySQL.MYSQL_URL}}` |
+| `JWT_SECRET` | 64+ character random string |
+| `FRONTEND_URL` | `https://blockcertfrontend-production.up.railway.app` |
+| `ALLOWED_ORIGINS` | `https://blockcertfrontend-production.up.railway.app` |
+| `RPC_URL` | `https://rpc-amoy.polygon.technology` |
+| `CHAIN_ID` | `80002` |
+| `CONTRACT_ADDRESS` | `0x60bD0df240D74FFc83f94CE1205FE939413F03F7` |
+| `PRIVATE_KEY` | Deployer wallet private key (contract owner) |
+| `UPLOAD_DIR` | `/data/uploads` |
+
+5. Generate a public domain under **Settings → Networking**.
+6. Verify: `GET /api/v1/health` and `GET /api/v1/health/blockchain`.
+
+#### Step 4 — Deploy frontend
+
+1. Create a third service; rename to `@blockcert/frontend`.
+2. Configure using `Dockerfile.frontend` or `railway.frontend.toml`.
+3. Set build-time variables (Vite embeds these at build):
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_BASE_URL` | `https://blockcertbackend-production.up.railway.app/api/v1` |
+| `VITE_CHAIN_ID` | `80002` |
+| `VITE_CHAIN_NAME` | `Polygon Amoy` |
+| `VITE_EXPLORER_URL` | `https://amoy.polygonscan.com` |
+
+4. Set runtime variables: `HOST=0.0.0.0`, `NODE_ENV=production`.
+5. Generate public domain and update backend `FRONTEND_URL` / `ALLOWED_ORIGINS`.
+
+#### Step 5 — End-to-end verification
+
+1. Open frontend URL → Admin Login.
+2. Upload a sample PDF from `demo/samples/`.
+3. Confirm certificate status **ON_CHAIN** with a transaction hash.
+4. Open public verify page → result **VERIFIED**.
+5. Optionally view the transaction on [Amoy Polygonscan](https://amoy.polygonscan.com).
+
+Full operational guide: [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
+
+### 18.5 Issues Faced During Deployment and Resolutions
+
+During local development and Railway deployment, several integration issues were encountered. Documenting these demonstrates real-world DevOps troubleshooting.
+
+| # | Issue | Symptom | Root cause | Resolution |
+|---|-------|---------|------------|------------|
+| 1 | **CORS login failure** | Admin login showed "Network Error" in browser | Frontend ran on port `5174` but backend CORS only allowed `5173` | Updated `isOriginAllowed` in backend security config to allow localhost ports in development |
+| 2 | **Database seed failure** | `railway run db:seed` could not connect | Used local DB URL or internal `mysql.railway.internal` hostname from laptop | Used `railway run` with `MYSQL_PUBLIC_URL` from Railway MySQL variables |
+| 3 | **Backend crash on Railway** | Service showed 502 / crashed on start | MySQL not linked; missing `DATABASE_URL`, `JWT_SECRET`, blockchain env vars | Added MySQL plugin, linked variables, set full env var checklist |
+| 4 | **Frontend 502 / blocked host** | Railway URL returned 502 or "Blocked host" | Vite dev server did not bind to `0.0.0.0` or allow Railway hostnames | Set `host: true`, read `PORT` from env, added `allowedHosts: ['.up.railway.app']` in `frontend/vite.config.ts` |
+| 5 | **Blockchain upload: insufficient funds** | Certificate stuck at `PENDING` or `FAILED` | Backend wallet had no Amoy MATIC, or pointed at wrong contract/network | Funded deployer wallet via Polygon faucet; deployed real Amoy contract; updated `CONTRACT_ADDRESS` on Railway |
+| 6 | **`deploy:amoy` script crash** | Error accessing `deployer.address` | Missing `blockchain/.env` with `PRIVATE_KEY` | Created `blockchain/.env` from `.env.example`; improved error message in deploy script |
+| 7 | **Secrets in wrong file** | Private key accidentally placed in `.env.example` | Confusion between example template and actual secrets file | Restored `.env.example` with placeholders; secrets only in gitignored `blockchain/.env` and Railway variables |
+| 8 | **Wallet vs contract address** | Same address used for both env vars | Misunderstanding of Ethereum address roles | Clarified: contract address = deployed `CertificateRegistry`; wallet address = signer that pays gas and must be contract owner |
+| 9 | **Backend 502 after env update** | Temporary outage after setting `NODE_ENV=production` | Service redeploying while container restarted | Waited for redeploy; verified `/health/blockchain` returned `connected: true` and `isOwner: true` |
+| 10 | **Unnecessary blockchain service** | `@blockcert/blockchain` service crashed on Railway | Attempted to run Hardhat node in cloud — not needed for production | Removed service; backend calls Amoy RPC directly |
+
+### 18.6 Key Configuration Files (Deployment)
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.backend` | Multi-stage build for Express API |
+| `Dockerfile.frontend` | Production build for TanStack Start / Nitro |
+| `railway.backend.toml` | Railway config-as-code for backend |
+| `railway.frontend.toml` | Railway config-as-code for frontend |
+| `scripts/railway-start-backend.mjs` | Railway startup script (migrate + serve) |
+| `scripts/railway-seed.mjs` | One-time database seed helper |
+| `railway/backend.env.example` | Template for backend Railway variables |
+| `railway/frontend.env.example` | Template for frontend Railway variables |
+| `blockchain/deployments/amoy.json` | On-chain deployment record |
+| `frontend/vite.config.ts` | Railway host, port, and `allowedHosts` fix |
+
+### 18.7 Security Notes for Cloud Demo
+
+1. **Never commit** `.env` files or private keys to GitHub — use Railway Variables only.
+2. Use a **dedicated test wallet** for Amoy; do not reuse a mainnet wallet.
+3. **Change default admin password** after seeding before sharing the live URL.
+4. Polygon Amoy is a **testnet** — suitable for FYP demonstration, not for real academic credentials.
+5. PDF files persist only if the Railway **volume** is mounted at `/data/uploads`.
+
+### 18.8 Deployment Timeline (Summary)
+
+```
+Local development (Hardhat + Docker MySQL)
+        ↓
+Push monorepo to GitHub (sahilleth/BlockCert)
+        ↓
+Railway: MySQL + Backend + Frontend services
+        ↓
+Fix CORS, Vite host, env vars (issues 1–4)
+        ↓
+Deploy CertificateRegistry to Polygon Amoy (local machine)
+        ↓
+Update Railway CONTRACT_ADDRESS + PRIVATE_KEY + fund wallet
+        ↓
+Verify /health/blockchain → isOwner: true, balance > 0
+        ↓
+Live demo: login → upload → ON_CHAIN → verify → VERIFIED
+```
+
+---
+
+## 19. Results and Outcomes
+
+### 19.1 Functional Outcomes
 
 | Requirement | Status |
 |-------------|--------|
@@ -839,8 +1113,9 @@ Anticipated faculty questions — see Section 21 and Limitations.
 | Admin audit logs | ✅ Implemented |
 | API documentation | ✅ Swagger |
 | Automated tests | ✅ 45 total |
+| Cloud deployment (Railway) | ✅ Live on Railway + Polygon Amoy |
 
-### 18.2 Non-Functional Outcomes
+### 19.2 Non-Functional Outcomes
 
 | Aspect | Achievement |
 |--------|-------------|
@@ -850,7 +1125,7 @@ Anticipated faculty questions — see Section 21 and Limitations.
 | **Maintainability** | TypeScript, monorepo, migrations, documentation |
 | **Usability** | Single-page verify flow, mobile-responsive UI |
 
-### 18.3 Learning Outcomes for Students
+### 19.3 Learning Outcomes for Students
 
 Through this project, the team gained practical experience in:
 
@@ -864,13 +1139,14 @@ Through this project, the team gained practical experience in:
 
 ---
 
-## 19. Limitations
+## 20. Limitations
 
 | Limitation | Explanation |
 |------------|-------------|
 | **Local PDF storage** | PDFs stored on server filesystem, not IPFS — single point of failure if server compromised |
 | **Backend wallet trust** | Backend holds private key to issue on-chain — institutional key management needed for production |
-| **Testnet only (demo)** | Polygon Amoy used for demonstration; mainnet requires real MATIC and audit |
+| **Testnet only (demo)** | Polygon Amoy used for demonstration; mainnet requires real MATIC and professional audit |
+| **Cloud PDF storage** | Railway volume at `/data/uploads` — not IPFS; data tied to Railway project |
 | **No PDF digital signature** | System detects content tampering via hash, not cryptographic PDF signatures |
 | **Single institution** | No multi-college registry or federation |
 | **Gas dependency** | Issuance requires blockchain transaction; failed txs mark certificate `FAILED` |
@@ -878,7 +1154,7 @@ Through this project, the team gained practical experience in:
 
 ---
 
-## 20. Future Enhancements
+## 21. Future Enhancements
 
 1. **IPFS storage** — Store PDFs on decentralized storage; store IPFS CID on-chain.
 2. **Multi-signature issuance** — Require registrar + dean approval before on-chain registration.
@@ -893,7 +1169,7 @@ Through this project, the team gained practical experience in:
 
 ---
 
-## 21. Conclusion
+## 22. Conclusion
 
 BlockCert successfully demonstrates a **practical, secure, and verifiable** approach to academic certificate management using blockchain technology. By anchoring SHA-256 hashes on an immutable smart contract while keeping PDFs and personal data off-chain, the system balances **transparency**, **privacy**, and **cost efficiency**.
 
@@ -903,7 +1179,7 @@ The project meets its stated objectives and provides a solid foundation for real
 
 ---
 
-## 22. References and Further Reading
+## 23. References and Further Reading
 
 ### Project Documentation
 
@@ -918,6 +1194,8 @@ The project meets its stated objectives and provides a solid foundation for real
 | Database Schema | [../backend/docs/DATABASE.md](../backend/docs/DATABASE.md) |
 | Blockchain Integration | [../backend/docs/BLOCKCHAIN_INTEGRATION.md](../backend/docs/BLOCKCHAIN_INTEGRATION.md) |
 | Security Guide | [../backend/docs/SECURITY.md](../backend/docs/SECURITY.md) |
+| Railway Deployment Guide | [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) |
+| Amoy Deployment Record | [../blockchain/deployments/amoy.json](../blockchain/deployments/amoy.json) |
 | Smart Contract Spec | [../blockchain/docs/CONTRACT.md](../blockchain/docs/CONTRACT.md) |
 
 ### External References
@@ -943,7 +1221,8 @@ The project meets its stated objectives and provides a solid foundation for real
 | **Polygon Amoy** | Ethereum-compatible testnet for Polygon (Chain ID 80002) |
 | **Hardhat** | Local Ethereum development node for testing |
 | **Immutable** | Data that cannot be changed after being written to blockchain |
-| **Tamper-evident** | System that detects unauthorized modification of data |
+| **Railway** | Cloud platform used to host backend, frontend, and MySQL |
+| **Volume (Railway)** | Persistent disk mount so uploaded PDFs survive redeploys |
 
 ---
 
@@ -992,6 +1271,14 @@ The project meets its stated objectives and provides a solid foundation for real
 **Q5: What is the cost per certificate on Polygon?**
 
 > On testnet, gas is free (faucet MATIC). On mainnet, storing a hash costs a small fraction of a cent on Polygon due to low gas fees compared to Ethereum mainnet.
+
+**Q6: How was the project deployed to the cloud?**
+
+> BlockCert runs on Railway with three components: MySQL database, Express backend (with a persistent volume for PDFs), and TanStack Start frontend. The smart contract was deployed separately to Polygon Amoy from a local machine using Hardhat (`npm run deploy:amoy`). The backend on Railway connects to Amoy via RPC and signs transactions with the contract owner's wallet. See Section 18 for the full deployment story and issues resolved.
+
+**Q7: What is the difference between the wallet address and the contract address?**
+
+> The **wallet address** (`0x96fc...BD923`) is the account that holds MATIC and signs blockchain transactions. The **contract address** (`0x60bD...03F7`) is where the `CertificateRegistry` smart contract code lives on-chain. The backend wallet must be the contract **owner** to issue certificates.
 
 ---
 
