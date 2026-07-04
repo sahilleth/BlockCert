@@ -19,12 +19,24 @@ Make sure you linked @blockcert/backend first:
 }
 
 console.log(`Seeding Railway DB (${process.env.RAILWAY_ENVIRONMENT ?? "railway"})…`);
-console.log(`DATABASE_URL=${process.env.DATABASE_URL ? "[set]" : "[MISSING — add MySQL to project]"}`);
 
-if (!process.env.DATABASE_URL && !process.env.MYSQL_URL) {
-  console.error("\n❌ DATABASE_URL not set on Railway backend service.\n");
+// Internal mysql.railway.internal only works inside Railway containers.
+// From your laptop, railway run needs the public TCP proxy URL.
+const dbUrl = (
+  process.env.MYSQL_PUBLIC_URL ??
+  process.env.DATABASE_URL ??
+  process.env.MYSQL_URL ??
+  ""
+).replace(/^mysql2:\/\//i, "mysql://");
+
+console.log(`DATABASE_URL=${dbUrl ? "[set]" : "[MISSING — add MySQL to project]"}`);
+
+if (!dbUrl) {
+  console.error("\n❌ No database URL. Add MySQL and link DATABASE_URL on backend.\n");
   process.exit(1);
 }
+
+process.env.DATABASE_URL = dbUrl;
 
 execSync("npm run db:seed --workspace=@blockcert/backend", {
   stdio: "inherit",
