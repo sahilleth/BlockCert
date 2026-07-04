@@ -7,7 +7,8 @@ import { nitro } from "nitro/vite";
 
 export default defineConfig({
   server: {
-    port: 5173,
+    host: true,
+    port: Number(process.env.PORT) || 5173,
     strictPort: false,
   },
   plugins: [
