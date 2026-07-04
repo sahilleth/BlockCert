@@ -4,7 +4,7 @@ import "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
-dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const PRIVATE_KEY =
   process.env.PRIVATE_KEY ?? process.env.BLOCKCHAIN_PRIVATE_KEY ?? "";
