@@ -402,6 +402,7 @@ Full guide: [backend/docs/SECURITY.md](backend/docs/SECURITY.md)
 | Topic | Link |
 |-------|------|
 | **Faculty presentation & project report** | [docs/PROJECT_PRESENTATION.md](docs/PROJECT_PRESENTATION.md) |
+| **Railway deployment (live hosting)** | [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md) |
 | Installation (detailed) | [docs/INSTALLATION.md](docs/INSTALLATION.md) |
 | MySQL setup | [docs/MYSQL_SETUP.md](docs/MYSQL_SETUP.md) |
 | API reference | [docs/API.md](docs/API.md) |

@@ -3,6 +3,7 @@
 | Document | Description |
 |----------|-------------|
 | [**Project Presentation (Faculty)**](./PROJECT_PRESENTATION.md) | Complete project explanation for faculty evaluation and viva |
+| [**Railway Deployment**](./RAILWAY_DEPLOYMENT.md) | Step-by-step live hosting on Railway |
 | [Installation Guide](./INSTALLATION.md) | Step-by-step setup + one-command install |
 | [MySQL Setup](./MYSQL_SETUP.md) | Database installation and migrations |
 | [MetaMask Setup](./METAMASK_SETUP.md) | Wallet configuration for testnet |

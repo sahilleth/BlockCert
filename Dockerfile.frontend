@@ -1,0 +1,37 @@
+# BlockCert Verifier UI — production image for Railway / Docker
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/package.json
+COPY blockchain/package.json ./blockchain/package.json
+COPY frontend/package.json ./frontend/package.json
+
+RUN npm ci --legacy-peer-deps
+
+COPY frontend ./frontend
+
+ARG VITE_API_BASE_URL=http://localhost:5000/api/v1
+ARG VITE_CHAIN_ID=80002
+ARG VITE_CHAIN_NAME="Polygon Amoy"
+ARG VITE_EXPLORER_URL=https://amoy.polygonscan.com
+ARG VITE_APP_NAME=BlockCert
+ARG VITE_APP_TAGLINE="Blockchain Certificate Verification"
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_CHAIN_ID=$VITE_CHAIN_ID
+ENV VITE_CHAIN_NAME=$VITE_CHAIN_NAME
+ENV VITE_EXPLORER_URL=$VITE_EXPLORER_URL
+ENV VITE_APP_NAME=$VITE_APP_NAME
+ENV VITE_APP_TAGLINE=$VITE_APP_TAGLINE
+
+RUN npm run build --workspace=@blockcert/frontend
+
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+WORKDIR /app/frontend
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]

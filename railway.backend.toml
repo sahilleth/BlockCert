@@ -1,0 +1,12 @@
+# Copy/reference when creating the Backend service on Railway.
+# In the Railway dashboard: Settings → Config-as-code → path: railway.backend.toml
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.backend"
+
+[deploy]
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

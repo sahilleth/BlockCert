@@ -1,0 +1,25 @@
+# BlockCert API — production image for Railway / Docker
+FROM node:20-alpine
+
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/package.json
+COPY blockchain/package.json ./blockchain/package.json
+COPY frontend/package.json ./frontend/package.json
+
+RUN npm ci --legacy-peer-deps
+
+COPY backend ./backend
+COPY scripts/railway-start-backend.mjs ./scripts/railway-start-backend.mjs
+
+RUN npm run build --workspace=@blockcert/backend
+
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+
+EXPOSE 5000
+
+CMD ["node", "scripts/railway-start-backend.mjs"]

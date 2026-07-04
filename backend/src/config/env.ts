@@ -3,6 +3,21 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/** Railway MySQL plugin may expose MYSQL_URL or mysql2:// — normalize for Sequelize. */
+function resolveDatabaseUrl(): string {
+  const raw =
+    process.env.DATABASE_URL ??
+    process.env.MYSQL_URL ??
+    process.env.MYSQL_PUBLIC_URL ??
+    "";
+  return raw.replace(/^mysql2:\/\//i, "mysql://");
+}
+
+const databaseUrl = resolveDatabaseUrl();
+if (databaseUrl && !process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = databaseUrl;
+}
+
 /**
  * Blockchain env vars — primary names per spec.
  * Legacy aliases (BLOCKCHAIN_RPC_URL, BLOCKCHAIN_PRIVATE_KEY) supported for migration.
@@ -10,6 +25,7 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(5000),
+  HOST: z.string().default("0.0.0.0"),
   API_PREFIX: z.string().default("/api/v1"),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),

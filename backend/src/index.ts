@@ -31,8 +31,8 @@ async function bootstrap() {
       });
     }
 
-    app.listen(env.PORT, () => {
-      logger.info(`BlockCert API running on http://localhost:${env.PORT}`);
+    app.listen(env.PORT, env.HOST, () => {
+      logger.info(`BlockCert API listening on ${env.HOST}:${env.PORT}`);
       logger.info(`API prefix: ${env.API_PREFIX}`);
       logger.info(`Swagger docs: http://localhost:${env.PORT}${env.API_PREFIX}/docs`);
       logger.info(`Blockchain health: http://localhost:${env.PORT}${env.API_PREFIX}/health/blockchain`);
